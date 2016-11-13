@@ -1,4 +1,4 @@
-package Tree;
+package GeneralTree;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,14 +13,13 @@ import java.util.Date;
  *
  * @author testuser
  */
-class Node {
+public class Node {
     Node parent;
     public ArrayList<Node> children = new ArrayList();
-    public FileDescriptor item;    
+    public FileDescriptor item = new FileDescriptor();    
     
     public Node(){
         parent = null;
-        
     }
     
     public Node(FileDescriptor item) {
