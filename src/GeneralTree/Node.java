@@ -16,20 +16,9 @@ import java.util.Date;
 public class Node {
     Node parent;
     public ArrayList<Node> children = new ArrayList();
-    public FileDescriptor item = new FileDescriptor();    
-    
-    public Node(){
-        parent = null;
-    }
-    
+    public FileDescriptor item;    
+       
     public Node(FileDescriptor item) {
         this.item = item; 
-    }
-    
-    public Node(FileDescriptor item, Node parent){
-        this.item = item;
-        this.parent = parent;
-    }
-
-    
+    } 
 }

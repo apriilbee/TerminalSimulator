@@ -18,15 +18,6 @@ public class FileDescriptor {
     public boolean isDirectory;
     String content; 
     
-    FileDescriptor(){
-        
-    }
-    
-    FileDescriptor(String name, boolean isDirectory){
-        this.name = name;
-        this.isDirectory = isDirectory;
-    }
-    
     FileDescriptor(String name, Date created, boolean isDirectory){
         this.name = name;
         this.created = created;

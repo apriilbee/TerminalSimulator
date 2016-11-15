@@ -9,6 +9,7 @@ import GeneralTree.FileDescriptor;
 import GeneralTree.Node;
 import GeneralTree.Tree;
 import static GeneralTree.Tree.getDate;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 
@@ -19,13 +20,14 @@ import java.util.Scanner;
 public class Tester {
     static Tree t = new Tree();
     public static void main(String[] args) throws ClassNotFoundException {
-        System.out.println(t.current.item.name);
         int ch = 0;
-        System.out.print("Menu\n1. Insert\n2. Delete\n3. Search\n4. Display\n5. Change Directory\n6. Back\n7. Exit\n");
+        System.out.print("Menu\n1. Insert\n2. Delete\n3. Search\n4. Display\n5. Change Directory\n"
+                + "6. Back\n7. Exit");
         do{
             Scanner sc = new Scanner(System.in);
             System.out.print("\n\nChoice: ");
             ch = sc.nextInt();
+            
             switch(ch){
                 case 1: {
                     insert();
@@ -45,6 +47,7 @@ public class Tester {
                 } 
                 case 5: {
                     chdir();
+                    
                     break;
                 }
                 case 6: {
@@ -54,6 +57,7 @@ public class Tester {
                 default:
                     ch = sc.nextInt();
             }
+            getAbsolutePath(t.current);
             System.out.println("");
         }while(ch!=7);
     }
@@ -70,11 +74,14 @@ public class Tester {
         String title = sc2.nextLine();
         switch(ch){
                 case 1: {
+                    //make file lang 
+                    //kuwang pa ni ug automatic open
                     Node n = new Node(new FileDescriptor(title, getDate(), false));
                     t.insertNode(t.current,n);
                     break;
                 }
                 case 2: {
+                    //mkdir
                     Node n = new Node(new FileDescriptor(title, getDate(), true));
                     t.insertNode(t.current,n);
                     break;
@@ -90,11 +97,18 @@ public class Tester {
         Scanner sc = new Scanner(System.in);
         System.out.println("Delete: ");
         String del = sc.nextLine();
-        t.deleteNode(t.current,t.locateNode(t.current, del));
+        t.deleteNode(t.current,t.searchNode(t.current, del));
     }
 
-    private static void search() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private static void search() throws ClassNotFoundException {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Regex: ");
+        String r = sc.nextLine();
+        ArrayList<Node> n = t.search(t.current, r);
+        for(int i=0; i<n.size(); i++){
+            System.out.println(n.get(i).item.name);
+        }
+        
     }
 
     private static void display() {
@@ -110,7 +124,7 @@ public class Tester {
         Scanner sc = new Scanner(System.in);
         System.out.println("Dir name: ");
         String dir = sc.nextLine();
-        Node n = t.locateNode(t.root, dir);
+        Node n = t.searchNode(t.current, dir);
         if(dir.equals("root"))
             t.current = t.root;
         else if(n==null)
@@ -119,6 +133,7 @@ public class Tester {
             System.out.println(dir + " is not a directory");
         else{
             t.current = n;
+            System.out.println(t.current.item.name + " thishere");
         }
     }
     
@@ -128,6 +143,15 @@ public class Tester {
         else {
             System.out.println("Already in root node.");
         }
+    }
+    
+    private static void getAbsolutePath(Node cur){
+        Node p = cur;
+        if(p.parent!=null){
+           getAbsolutePath(p.parent); 
+           System.out.print("/" + p.item.name);
+        }
+       
     }
 
 }
