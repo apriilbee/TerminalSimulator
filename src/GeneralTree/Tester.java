@@ -77,13 +77,15 @@ public class Tester {
                     //make file lang 
                     //kuwang pa ni ug automatic open
                     Node n = new Node(new FileDescriptor(title, getDate(), false));
-                    t.insertNode(t.current,n);
+                    if(!(t.insertNode(t.current,n)))
+                        System.out.println(n.item.name + " already exists in " + t.current.item.name);
                     break;
                 }
                 case 2: {
                     //mkdir
                     Node n = new Node(new FileDescriptor(title, getDate(), true));
-                    t.insertNode(t.current,n);
+                     if(!(t.insertNode(t.current,n)))
+                        System.out.println(n.item.name + " already exists in " + t.current.item.name);
                     break;
                 }
                 case 3: break;
@@ -97,7 +99,8 @@ public class Tester {
         Scanner sc = new Scanner(System.in);
         System.out.println("Delete: ");
         String del = sc.nextLine();
-        t.deleteNode(t.current,t.searchNode(t.current, del));
+        if(!(t.deleteNode(t.current,t.searchNode(t.current, del))))
+            System.out.println("not in here");
     }
 
     private static void search() throws ClassNotFoundException {

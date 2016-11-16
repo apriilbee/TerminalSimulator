@@ -24,36 +24,24 @@ public class Tree {
     }
    
     public boolean insertNode(Node parent, Node child){
-        if(parent.item.isDirectory){
-            if(!checkNodeExists(parent,child)){
-                child.parent = parent;
-                parent.children.add(child);
-                return true;
-            }
-            else{
-                System.out.println(child.item.name + " already exists in " + parent.item.name);
-                return false;
-            }
+        if(!checkNodeExists(parent,child)){
+            child.parent = parent;
+            parent.children.add(child);
+            return true;
         }
         else{
-            System.out.println("Can't insert to a file.");
             return false;
         }
+       
     }
     
     public boolean deleteNode(Node parent, Node child){
-        if(parent.item.isDirectory){
-            if(parent.children.contains(child)){
-                parent.children.remove(child);
-                return true;
-            }
-            else{
-                System.out.println(child.item.name + " not in " + parent.item.name);
-                return false;
-            }
+        if(parent.children.contains(child)){
+            parent.children.remove(child);
+            return true;
         }
-        else{
-           return false;
+        else {
+            return false;
         }
     }
     
