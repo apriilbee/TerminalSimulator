@@ -66,47 +66,11 @@ public class Tree {
         }
         return false;
     }
-     
-    //----------------- transfer fxns below to FileSystem class------------------//
     
     public static Date getDate(){
         DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
         Date date = new Date();
         return date;
-    }
-    
-    // recursively looks for a file in all directory
-    // where is
-    public Node searchAll(Node n, String title) throws ClassNotFoundException{
-        for(int i=0; i<n.children.size(); i++){
-            Node tmp = n.children.get(i);
-            if(tmp.item.name.equals(title)){
-                System.out.println(title + " is in " + n.item.name);
-                return tmp;
-            }
-            else{
-                if(tmp.item.isDirectory)
-                   searchAll(tmp, title);
-            }
-        }
-        return null;
-    }
-    
-    // looks for a file directory
-    // ls with wildcard and regex but not yet done
-    public ArrayList<Node> search(Node n, String search) throws ClassNotFoundException{
-        ArrayList<Node> match = new ArrayList<>();
-        //wildcard
-        
-        search = search.replaceAll("\\*", "\\\\w*");
-            for(int i=0; i<n.children.size(); i++){
-            Node tmp = n.children.get(i);
-            if(tmp.item.name.matches(search)){
-                match.add(tmp);
-            }
-        }
-
-        return match;
     }
     
     //recursive display; opens all subdirectories
@@ -122,15 +86,4 @@ public class Tree {
             }
         }
     }
-    
-    //displays all files/directory in specific folder; not recursive
-    // ls -
-    public void display(Node n, String indent){
-        for(int i=0; i<n.children.size(); i++){
-            Node tmp = n.children.get(i);
-            System.out.println(indent + tmp.item.name);
-        }
-    }
-
-   
 }
