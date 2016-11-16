@@ -15,14 +15,7 @@ import java.util.Date;
  * @author April Dae Bation
  */
 public class Tree {
-    Node current;
-    Node root;
-    
-    public Tree(){
-        root = new Node(new FileDescriptor("root", getDate(), true));
-        current = root;
-    }
-   
+
     public boolean insertNode(Node parent, Node child){
         if(!checkNodeExists(parent,child)){
             child.parent = parent;
@@ -67,23 +60,8 @@ public class Tree {
         return false;
     }
     
-    public static Date getDate(){
-        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
-        Date date = new Date();
-        return date;
-    }
+ 
     
     //recursive display; opens all subdirectories
-    public void displayAll(Node n, String indent){
-        for(int i=0; i<n.children.size(); i++){
-            Node tmp = n.children.get(i);
-            if(tmp.item.isDirectory){
-                System.out.println(indent + tmp.item.name + "fff");
-                displayAll(tmp,indent+"->  ");
-            }
-            else{
-                System.out.println(indent + tmp.item.name);
-            }
-        }
-    }
+   
 }

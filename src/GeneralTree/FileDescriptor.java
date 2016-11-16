@@ -21,7 +21,8 @@ public class FileDescriptor {
     FileDescriptor(String name, Date created, boolean isDirectory){
         this.name = name;
         this.created = created;
-        this.last_modified = (Date) created.clone();
+        this.last_modified = (Date) created;
         this.isDirectory = isDirectory;
+        this.content = "";
     }
 }

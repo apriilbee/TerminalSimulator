@@ -6,7 +6,10 @@
 package GeneralTree;
 
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -18,6 +21,8 @@ import java.util.logging.Logger;
  * @author testuser
  */
 public class FileSystem {
+    static Node root = new Node(new FileDescriptor("root", getDate(), true));
+    static Node current = root; 
     static Map<String, Runnable> commands = new HashMap();
     static Tree tree = new Tree();
     static String input; 
@@ -28,8 +33,9 @@ public class FileSystem {
         Scanner sc = new Scanner(System.in);
         
         do{
-            getAbsolutePath(tree.current);
-            System.out.print(": ");
+            System.out.print("test@user:");
+            getAbsolutePath(current);
+            System.out.print("$ ");
             input = sc.nextLine();
             try{
                 commands.get(getCommand(input)).run();
@@ -45,9 +51,9 @@ public class FileSystem {
             System.out.println("Missing arguments.");
         else if(!args[1].contains("/")){
             for(int i=1; i<args.length; i++){
-                Node n = new Node(new FileDescriptor(args[i], tree.getDate(), true));
-                if(!(tree.insertNode(tree.current,n)))
-                    System.out.println(n.item.name + " already exists in " + tree.current.item.name);
+                Node n = new Node(new FileDescriptor(args[i], getDate(), true));
+                if(!(tree.insertNode(current,n)))
+                    System.out.println(n.item.name + " already exists in " + current.item.name);
             }
         }
         else{
@@ -68,13 +74,24 @@ public class FileSystem {
         String[] args = input.split(" ");
         if(args.length < 2)
             System.out.println("Missing arguments.");
-        else if(!args[1].contains("/")){
-            if(!(tree.deleteNode(tree.current,tree.searchNode(tree.current, args[1]))))
-                System.out.println(args[1] + " does not exist.");
+        else {
+            if(!args[1].contains("/") && !(args[1].contains("*"))){
+                if(!(tree.deleteNode(current,tree.searchNode(current, args[1]))))
+                    System.out.println(args[1] + " does not exist.");
+            }
+            else if(args[1].contains("/")){
+                
+            }
+            else if(args[1].contains("*")){
+                ArrayList<Node> list = findAll(current, args[1]);
+                for(int i=0; i<list.size(); i++){
+                    tree.deleteNode(current,list.get(i));
+                }
+            }
         }
-        else{
+        
             
-        }
+        
     }
 
     private static void cd() throws ClassNotFoundException {
@@ -84,16 +101,16 @@ public class FileSystem {
             System.out.println("Missing arguments.");
         else if(!args[1].contains("/")){
             go = args[1]; 
-              Node n = tree.searchNode(tree.current, go);
+              Node n = tree.searchNode(current, go);
               
             if(go.equals("root"))
-                tree.current = tree.root;
+                current = root;
             else if(n==null)
                 System.out.println("Directory does not exist");
             else if (!n.item.isDirectory)
                 System.out.println(args[1] + " is not a directory");
             else{
-                tree.current = n;
+                current = n;
             }
         }
         else{
@@ -109,23 +126,30 @@ public class FileSystem {
         if(args.length < 2)
             System.out.println("Missing arguments.");
         else{
-            if(tree.searchNode(tree.current, args[1])!=null){
-                //open editor here
+            if(tree.searchNode(current, args[1])!=null){
+                Node n = tree.searchNode(current, args[1]);
+                System.out.println(n.item.content);
+                n.item.content += "\n";
+                openEditor(n);
+                n.item.last_modified = getDate();
             }
             else{
-                Node n = new Node(new FileDescriptor(args[1], tree.getDate(), false));
-                if(!(tree.insertNode(tree.current,n)))
-                   System.out.println(n.item.name + " already exists in " + tree.current.item.name);
-                //open editor here
+                Node n = new Node(new FileDescriptor(args[1], getDate(), false));
+                if(!(tree.insertNode(current,n)))
+                   System.out.println(n.item.name + " already exists in " + current.item.name);
+                else{
+                    Scanner sc = new Scanner(System.in);
+                    String tmp;
+                    openEditor(n);
+                    n.item.last_modified = getDate();
+                }
             }
-            
         }
-
     }
 
     private static void goback() {
-        if(tree.current.parent!=null)
-            tree.current = tree.current.parent;
+        if(current.parent!=null)
+            current = current.parent;
         else {
             System.out.println("Already in root node.");
         }
@@ -136,12 +160,12 @@ public class FileSystem {
         if(args.length < 3)
             System.out.println("Missing arguments.");
         else{
-            if(tree.searchNode(tree.current, args[1])!=null){
-                if(tree.searchNode(tree.current, args[2])!=null){
+            if(tree.searchNode(current, args[1])!=null){
+                if(tree.searchNode(current, args[2])!=null){
                    System.out.println(args[2] + " already exists.");
                 }
                 else{
-                   tree.searchNode(tree.current, args[1]).item.name = args[2];
+                   tree.searchNode(current, args[1]).item.name = args[2];
                 }
             }
             else{
@@ -152,32 +176,53 @@ public class FileSystem {
     }
 
     private static void mv() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
     }
 
-    private static void cp() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    //fix this
+    private static void cp() throws ClassNotFoundException {
+         String[] args = input.split(" ");
+        if(args.length < 3)
+            System.out.println("Missing arguments.");
+        else {
+            Node tobecopied = tree.searchNode(current, args[1]);
+            Node new_node = tree.searchNode(current, args[2]);
+            if(tobecopied!=null && new_node==null){
+                new_node = new Node(new FileDescriptor(args[2],getDate(),tobecopied.item.isDirectory));
+                new_node.item.content = tobecopied.item.content;
+                //fix this. if ichange ang new copy, machange pd ang old copy
+                new_node.children = (ArrayList<Node>) tobecopied.children.clone();
+                tree.insertNode(current, new_node);
+            }
+            else if(tobecopied==null){
+                System.out.println(args[1] + " does not exist.");
+            }
+            else if (new_node!=null){
+                System.out.println(args[2] + " already exists.");
+            }
+        }
     }
-
+    
+    
     private static void ls() {
         String[] args = input.split(" ");
         if(args.length < 2)
             System.out.println("Missing arguments.");
         
         else if(args[1].equals("-")){
-            for(int i=0, ctr=0; i<tree.current.children.size(); i++){
-                Node tmp = tree.current.children.get(i);
-                System.out.print(tmp.item.name + "\t");
+            for(int i=0, ctr=0; i<current.children.size(); i++){
+                Node tmp = current.children.get(i);
+                System.out.print("Name: " + tmp.item.name + "\n" + "Date Created: " + tmp.item.created.toGMTString().replace("GMT", "") + "\n" + "Last Modified: " + tmp.item.last_modified.toGMTString().replace("GMT", ""));
+                System.out.println("\n");
             }
-            System.out.println("");
         }
         
         else if (args[1].contains("*")){
             ArrayList<Node> match = new ArrayList<>();
             
             String search = args[1].replaceAll("\\*", "\\\\w*");
-            for(int i=0; i<tree.current.children.size(); i++){
-                Node tmp = tree.current.children.get(i);
+            for(int i=0; i<current.children.size(); i++){
+                Node tmp = current.children.get(i);
                 if(tmp.item.name.matches(search)){
                     match.add(tmp);
                 }
@@ -193,13 +238,19 @@ public class FileSystem {
         }
     }
 
-    private static void show() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private static void show() throws ClassNotFoundException {
+        String[] args = input.split(" ");
+        if(args.length < 2)
+            System.out.println("Missing arguments.");
+        else {
+            Node n = tree.searchNode(current, args[1]);
+            System.out.println(n.item.content);
+        }
     }
 
     private static void whereis() throws ClassNotFoundException {
         String[] args = input.split(" ");
-        searchAll(tree.root, args[1]);
+        searchAll(root, args[1]);
         System.out.println("");
     }
     
@@ -260,9 +311,21 @@ public class FileSystem {
             }
         });
         commands.put("mv", () -> mv());
-        commands.put("cp", () -> cp());
+        commands.put("cp", () -> {
+            try {
+                cp();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(FileSystem.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
         commands.put("ls", () -> ls());
-        commands.put("show", () -> show());
+        commands.put("show", () -> {
+            try {
+                show();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(FileSystem.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
         commands.put("whereis", () ->  {
             try {
                 whereis();
@@ -289,6 +352,40 @@ public class FileSystem {
     }
 
     private static void checkPathExists(String arg) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        String[] s = arg.split("/");
+        //fill here pa
+    }
+
+    private static void openEditor(Node n) {
+        Scanner sc = new Scanner(System.in);
+        String tmp = "";
+        do{
+            tmp =  sc.nextLine();
+            if(!(tmp.equals(":q!")))
+                n.item.content += tmp + "\n";
+        }while(!(tmp.equals(":q!")));
+        
+        StringBuilder x = new StringBuilder(n.item.content);
+        x.setLength(x.length()-1);
+        n.item.content = x.toString();
+    }
+
+    private static ArrayList<Node> findAll(Node current, String arg) {
+        ArrayList<Node> match = new ArrayList<>();
+            
+        String search = arg.replaceAll("\\*", "\\\\w*");
+        for(int i=0; i<current.children.size(); i++){
+            Node tmp = current.children.get(i);
+            if(tmp.item.name.matches(search)){
+                match.add(tmp);
+            }
+        }
+        return match;
+    }
+    
+    public static Date getDate(){
+        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+        Date date = new Date();
+        return date;
     }
 }
