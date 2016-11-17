@@ -331,8 +331,24 @@ public class FileSystem {
         if(args.length < 2)
             System.out.println("Missing arguments.");
         else {
-            Node n = tree.searchNode(current, args[1]);
-            System.out.println(n.item.content);
+            Node n = null;
+            if(!args[1].contains("/")){
+                n = tree.searchNode(current, args[1]);
+            }
+            else{
+                if(checkPathExists(args[1])){
+                    n = recursive_search(args[1]);
+                }
+                else{
+                    System.out.println("File does not exist.");
+                }
+            }
+            if(n==null)
+                System.out.println("File does not exist.");
+            else if(!n.item.isDirectory)
+                System.out.println(n.item.content);
+            else if(n.item.isDirectory)
+                System.out.println(args[1] + " is a directory.");
         }
     }
 
