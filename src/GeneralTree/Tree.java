@@ -51,7 +51,7 @@ public class Tree {
     }
     
      //returns true if file of the same name exists in directory
-    private boolean checkNodeExists(Node n, Node t) {
+    public boolean checkNodeExists(Node n, Node t) {
         String name = t.item.name;
         for(int i=0; i<n.children.size(); i++){
             if(n.children.get(i).item.name.equals(name))
@@ -59,9 +59,4 @@ public class Tree {
         }
         return false;
     }
-    
- 
-    
-    //recursive display; opens all subdirectories
-   
 }

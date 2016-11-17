@@ -9,8 +9,12 @@ package GeneralTree;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -37,6 +41,8 @@ public class FileSystem {
             getAbsolutePath(current);
             System.out.print("$ ");
             input = sc.nextLine();
+            if(input.isEmpty())
+                continue;
             try{
                 commands.get(getCommand(input)).run();
             } catch (Exception e){
@@ -57,16 +63,21 @@ public class FileSystem {
             }
         }
         else{
-              checkPathExists(args[1]);
-//            Node dest = getDestination(args[1]);
-//            if(dest == null)
-//                System.out.println("Folder does not exist");
-//            else {
-//                String name = getRelativePath(args[1]);
-//                Node n = new Node(new FileDescriptor(name, tree.getDate(), true));
-//                if(!(tree.insertNode(dest,n)))
-//                    System.out.println(n.item.name + " already exists in " + dest.item.name);
-//            }
+            String[] s = args[1].split("/");
+            List<String> node_path = new ArrayList<String>(Arrays.asList(s));
+            node_path.removeAll(Collections.singleton(""));
+            
+            String new_item = node_path.remove(node_path.size()-1);
+            String path = "";
+            for(int i=0; i<node_path.size(); i++){
+                path += node_path.get(i) + "/";
+            }
+            if (checkPathExists(path)){
+                Node n = recursive_search(path);
+                Node new_item_node = new Node(new FileDescriptor(new_item, getDate(), true));
+                if(!(tree.insertNode(n,new_item_node)))
+                    System.out.println(n.item.name + " already exists in " + current.item.name);
+            }
         }
     }
 
@@ -76,11 +87,47 @@ public class FileSystem {
             System.out.println("Missing arguments.");
         else {
             if(!args[1].contains("/") && !(args[1].contains("*"))){
-                if(!(tree.deleteNode(current,tree.searchNode(current, args[1]))))
-                    System.out.println(args[1] + " does not exist.");
+                for(int i=1; i<args.length; i++){
+                    Node del = tree.searchNode(current, args[i]);
+                    if((getCommand(input).equals("rm") && !del.item.isDirectory) ||
+                       (getCommand(input).equals("rmdir") && del.item.isDirectory)    ){
+                        if(!(tree.deleteNode(current,del)))
+                            System.out.println(args[1] + " does not exist.");
+                    }
+                    else{
+                        if(getCommand(input).equals("rm") && del.item.isDirectory)
+                            System.out.println(del.item.name + " is a directory.");
+                        if(getCommand(input).equals("rmdir") && !del.item.isDirectory) 
+                            System.out.println(del.item.name + " is not a directory.");
+                        break;
+                    }
+                }
             }
             else if(args[1].contains("/")){
-                
+                String[] s = args[1].split("/");
+                List<String> node_path = new ArrayList<String>(Arrays.asList(s));
+                node_path.removeAll(Collections.singleton(""));
+
+                String del = node_path.remove(node_path.size()-1);
+                String path = "";
+                for(int i=0; i<node_path.size(); i++){
+                    path += node_path.get(i) + "/";
+                }
+                if (checkPathExists(path)){
+                    Node n = recursive_search(path);
+                    Node del_node = tree.searchNode(n, del);
+                    if((getCommand(input).equals("rm") && !del_node.item.isDirectory) ||
+                       (getCommand(input).equals("rmdir") && del_node.item.isDirectory)    ){
+                        if(!(tree.deleteNode(n, del_node)))
+                            System.out.println(del + " does not exist in " + n.item.name);
+                    }
+                    else{
+                        if(getCommand(input).equals("rm") && del_node.item.isDirectory)
+                            System.out.println(del_node.item.name + " is a directory.");
+                        if(getCommand(input).equals("rmdir") && !del_node.item.isDirectory) 
+                            System.out.println(del_node.item.name + " is not a directory.");
+                    }
+                }
             }
             else if(args[1].contains("*")){
                 ArrayList<Node> list = findAll(current, args[1]);
@@ -89,9 +136,6 @@ public class FileSystem {
                 }
             }
         }
-        
-            
-        
     }
 
     private static void cd() throws ClassNotFoundException {
@@ -101,12 +145,12 @@ public class FileSystem {
             System.out.println("Missing arguments.");
         else if(!args[1].contains("/")){
             go = args[1]; 
-              Node n = tree.searchNode(current, go);
+            Node n = tree.searchNode(current, go);
               
             if(go.equals("root"))
                 current = root;
             else if(n==null)
-                System.out.println("Directory does not exist");
+                System.out.println(args[1] + " does not exist");
             else if (!n.item.isDirectory)
                 System.out.println(args[1] + " is not a directory");
             else{
@@ -114,34 +158,66 @@ public class FileSystem {
             }
         }
         else{
-            go = "change pa ni";
-           // go = getRelativePath(args[1]);
+            if(checkPathExists(args[1])){
+                String[] s = args[1].split("/");
+                Node n;
+                n = recursive_search(args[1]);
+                if(!n.item.isDirectory)
+                    System.out.println(n.item.name + " is not a directory.");
+                else
+                    current = n;
+            }
+            else{
+                System.out.println(args[1] + " does not exist in " + current.item.name);
+            }
         }
-
-      
     }
 
     private static void edit() throws ClassNotFoundException {
         String[] args = input.split(" ");
+        boolean flag = false;
+        Node location = current;
         if(args.length < 2)
             System.out.println("Missing arguments.");
         else{
-            if(tree.searchNode(current, args[1])!=null){
-                Node n = tree.searchNode(current, args[1]);
-                System.out.println(n.item.content);
-                n.item.content += "\n";
-                openEditor(n);
-                n.item.last_modified = getDate();
-            }
+            String file; 
+            if(!args[1].contains("/"))
+               file = args[1];
             else{
-                Node n = new Node(new FileDescriptor(args[1], getDate(), false));
-                if(!(tree.insertNode(current,n)))
-                   System.out.println(n.item.name + " already exists in " + current.item.name);
+                String[] s = args[1].split("/");
+                List<String> node_path = new ArrayList<String>(Arrays.asList(s));
+                node_path.removeAll(Collections.singleton(""));
+
+                file = node_path.remove(node_path.size()-1);
+                String path = "";
+                for(int i=0; i<node_path.size(); i++){
+                    path += node_path.get(i) + "/";
+                }
+                if (!checkPathExists(path)){
+                   flag = true;
+                }
                 else{
-                    Scanner sc = new Scanner(System.in);
-                    String tmp;
+                    location = recursive_search(path);
+                }
+            }
+            if(flag==false){
+                if(tree.searchNode(location, file)!=null){
+                    Node n = tree.searchNode(location, file);
+                    System.out.println(n.item.content);
+                    n.item.content += "\n";
                     openEditor(n);
                     n.item.last_modified = getDate();
+                }
+                else{
+                    Node n = new Node(new FileDescriptor(file, getDate(), false));
+                    if(!(tree.insertNode(location,n)))
+                       System.out.println(n.item.name + " already exists in " + location.item.name);
+                    else{
+                        Scanner sc = new Scanner(System.in);
+                        String tmp;
+                        openEditor(n);
+                        n.item.last_modified = getDate();
+                    }
                 }
             }
         }
@@ -351,11 +427,6 @@ public class FileSystem {
         }
     }
 
-    private static void checkPathExists(String arg) {
-        String[] s = arg.split("/");
-        //fill here pa
-    }
-
     private static void openEditor(Node n) {
         Scanner sc = new Scanner(System.in);
         String tmp = "";
@@ -387,5 +458,42 @@ public class FileSystem {
         DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
         Date date = new Date();
         return date;
+    }
+    
+    private static boolean checkPathExists(String arg) throws ClassNotFoundException {
+        String[] s = arg.split("/");
+        List<String> node_path = new ArrayList<String>(Arrays.asList(s));
+        node_path.removeAll(Collections.singleton(""));
+        int i = (node_path.get(0).equals("root")) ? 1 : 0;
+        Node tmp =  root;
+        Node tmp2 = null;
+        for(;i<node_path.size(); i++){
+            tmp2 = tree.searchNode(tmp,node_path.get(i));
+            if(tmp2 == null)
+                return false;
+            else if(!(tree.checkNodeExists(tmp, tmp2)))
+                return false;
+            tmp = tree.searchNode(tmp,node_path.get(i));
+        }
+        return true;
+    }
+
+    
+    public static Node recursive_search(String arg) throws ClassNotFoundException{
+        String[] s = arg.split("/");
+        List<String> node_path = new ArrayList<String>(Arrays.asList(s));
+        node_path.removeAll(Collections.singleton(""));
+        int i = (node_path.get(0).equals("root")) ? 1 : 0;
+        Node tmp = root;
+        Node tmp2 = null;
+        for(;i<node_path.size(); i++){
+             tmp2 = tree.searchNode(tmp,node_path.get(i));
+            if(tmp2 == null)
+                return null;
+            else if(!(tree.checkNodeExists(tmp, tmp2)))
+                return null;
+            tmp = tree.searchNode(tmp,node_path.get(i));
+        }
+        return tmp;
     }
 }
