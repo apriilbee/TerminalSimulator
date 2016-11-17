@@ -280,7 +280,7 @@ public class FileSystem {
     }
     
     
-    private static void ls() {
+    private static void ls() throws ClassNotFoundException {
         String[] args = input.split(" ");
         if(args.length < 2)
             System.out.println("Missing arguments.");
@@ -310,7 +310,19 @@ public class FileSystem {
             System.out.println("");
         }
         else if (args[1].contains("/")){
-            
+            if(checkPathExists(args[1])){
+                Node n = recursive_search(args[1]);
+                if(n.item.isDirectory){
+                    for(int i=0, ctr=0; i<n.children.size(); i++){
+                        Node tmp = n.children.get(i);
+                        System.out.print("Name: " + tmp.item.name + "\n" + "Date Created: " + tmp.item.created.toGMTString().replace("GMT", "") + "\n" + "Last Modified: " + tmp.item.last_modified.toGMTString().replace("GMT", ""));
+                        System.out.println("\n");
+                    }
+                }
+            }
+            else{
+                System.out.println(args[1] + " does not exist.");
+            }
         }
     }
 
@@ -394,7 +406,13 @@ public class FileSystem {
                 Logger.getLogger(FileSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
-        commands.put("ls", () -> ls());
+        commands.put("ls", () -> {
+            try {
+                ls();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(FileSystem.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
         commands.put("show", () -> {
             try {
                 show();
