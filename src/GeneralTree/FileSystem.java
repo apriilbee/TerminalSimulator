@@ -194,6 +194,7 @@ public class FileSystem {
                     path += node_path.get(i) + "/";
                 }
                 if (!checkPathExists(path)){
+                   System.out.println(path + " does not exist.");
                    flag = true;
                 }
                 else{
@@ -251,8 +252,31 @@ public class FileSystem {
         
     }
 
-    private static void mv() {
-    
+    private static void mv() throws ClassNotFoundException {
+        String[] args = input.split(" ");
+        if(args.length < 3)
+            System.out.println("Missing arguments.");
+        else{
+            Node file = tree.searchNode(current, args[1]);
+            if(file == null){
+                System.out.println(args[1] + " does not exist.");
+            }
+            else{
+                if(checkPathExists(args[2])){
+                    Node dest = recursive_search(args[2]);
+                    if(tree.checkNodeExists(dest, file))
+                        System.out.println(args[1] + " already in " + args[2]);
+                    else{
+                        current.children.remove(file);
+                        dest.children.add(file);
+                        file.parent = dest;
+                    }
+                }
+                else{
+                    System.out.println(args[2] + " does not exist.");
+                }
+            }
+        }
     }
 
     //fix this
@@ -414,7 +438,13 @@ public class FileSystem {
                 Logger.getLogger(FileSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
-        commands.put("mv", () -> mv());
+        commands.put("mv", () -> {
+            try {
+                mv();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(FileSystem.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
         commands.put("cp", () -> {
             try {
                 cp();
