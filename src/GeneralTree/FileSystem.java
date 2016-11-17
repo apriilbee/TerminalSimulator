@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -46,7 +45,7 @@ public class FileSystem {
             try{
                 commands.get(getCommand(input)).run();
             } catch (Exception e){
-                System.out.println("Command not found.");
+                System.out.println("Check commands");
             }
         } while(true);
     }
@@ -290,8 +289,9 @@ public class FileSystem {
             if(tobecopied!=null && new_node==null){
                 new_node = new Node(new FileDescriptor(args[2],getDate(),tobecopied.item.isDirectory));
                 new_node.item.content = tobecopied.item.content;
-                //fix this. if ichange ang new copy, machange pd ang old copy
-                new_node.children = (ArrayList<Node>) tobecopied.children.clone();
+                if(new_node.item.isDirectory){
+                    copyNodes(tobecopied, new_node);
+                }
                 tree.insertNode(current, new_node);
             }
             else if(tobecopied==null){
@@ -333,7 +333,7 @@ public class FileSystem {
             }
             System.out.println("");
         }
-        else if (args[1].contains("/")){
+        else {
             if(checkPathExists(args[1])){
                 Node n = recursive_search(args[1]);
                 if(n.item.isDirectory){
@@ -345,7 +345,7 @@ public class FileSystem {
                 }
             }
             else{
-                System.out.println(args[1] + " does not exist.");
+                System.out.println(args[1] + " does not exist in " + current.item.name);
             }
         }
     }
@@ -473,6 +473,7 @@ public class FileSystem {
                 Logger.getLogger(FileSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
+        
     }
      
         
@@ -559,5 +560,16 @@ public class FileSystem {
             tmp = tree.searchNode(tmp,node_path.get(i));
         }
         return tmp;
+    }
+
+    private static void copyNodes(Node tobecopied, Node new_node) {
+        for(int i=0; i<tobecopied.children.size(); i++){
+            Node tmp = new Node(new FileDescriptor(tobecopied.children.get(i).item.name, getDate(), tobecopied.children.get(i).item.isDirectory));
+            tmp.item.content = tobecopied.children.get(i).item.content;
+            if(tmp.item.isDirectory){
+                //fix this
+            }
+            tree.insertNode(new_node, tmp);
+        }
     }
 }
