@@ -46,6 +46,7 @@ public class FileSystem {
             } catch (Exception e){
                 System.out.println("Check commands");
             }
+            currentpath = "";
         } while(true);
     }
     
@@ -67,6 +68,12 @@ public class FileSystem {
                         for(int i=0; i<node_path.size(); i++){
                             path += node_path.get(i) + "/";
                         }
+                        
+                        if(!path.contains("root")){
+                            String tmp = path;
+                            path = currentpath + "/" + tmp; 
+                        }
+                        
                         if (checkPathExists(path)){
                             Node n = recursive_search(path);
                             Node new_item_node = new Node(new FileDescriptor(new_item, getDate(), true));
@@ -77,7 +84,7 @@ public class FileSystem {
                     else{
                         //for mkdir /this
                         Node new_item_node = new Node(new FileDescriptor(new_item, getDate(), true));
-                        if(!(tree.insertNode(root,new_item_node)))
+                        if(!(tree.insertNode(current,new_item_node)))
                             System.out.println(new_item_node.item.name + " already exists in " + current.item.name);
                     }
             }
@@ -90,55 +97,74 @@ public class FileSystem {
         if(args.length < 2)
             System.out.println("Missing arguments.");
         else {
-            if(!args[1].contains("/") && !(args[1].contains("*"))){
-                for(int i=1; i<args.length; i++){
-                    Node del = tree.searchNode(current, args[i]);
-                    if((getCommand(input).equals("rm") && !del.item.isDirectory) ||
-                       (getCommand(input).equals("rmdir") && del.item.isDirectory)    ){
-                        if(!(tree.deleteNode(current,del)))
-                            System.out.println(args[1] + " does not exist.");
-                    }
-                    else{
-                        if(getCommand(input).equals("rm") && del.item.isDirectory)
-                            System.out.println(del.item.name + " is a directory.");
-                        if(getCommand(input).equals("rmdir") && !del.item.isDirectory) 
-                            System.out.println(del.item.name + " is not a directory.");
-                        break;
-                    }
-                }
-            }
-            else if(args[1].contains("/")){
-                String[] s = args[1].split("/");
-                List<String> node_path = new ArrayList<String>(Arrays.asList(s));
-                node_path.removeAll(Collections.singleton(""));
+            for(int j=1; j<args.length; j++){
+                    String[] s = args[j].split("/");
+                    List<String> node_path = new ArrayList<String>(Arrays.asList(s));
+                    node_path.removeAll(Collections.singleton(""));
 
-                String del = node_path.remove(node_path.size()-1);
-                String path = "";
-                for(int i=0; i<node_path.size(); i++){
-                    path += node_path.get(i) + "/";
-                }
-                if (checkPathExists(path)){
-                    Node n = recursive_search(path);
-                    Node del_node = tree.searchNode(n, del);
-                    if((getCommand(input).equals("rm") && !del_node.item.isDirectory) ||
-                       (getCommand(input).equals("rmdir") && del_node.item.isDirectory)    ){
-                        if(!(tree.deleteNode(n, del_node)))
-                            System.out.println(del + " does not exist in " + n.item.name);
+                    String del = node_path.remove(node_path.size()-1);
+
+                    
+                    if(node_path.size() > 0){
+                        String path = "";
+                        for(int i=0; i<node_path.size(); i++){
+                            path += node_path.get(i) + "/";
+                        }
+                        if(!path.contains("root")){
+                            String tmp = path;
+                            path = currentpath + "/" + tmp; 
+                        }
+                            
+                    
+                        if (checkPathExists(path)){
+                            Node n = recursive_search(path);
+                            if(del.contains("*")){
+                                ArrayList<Node> list = findAll(n, del);
+                                for(int i=0; i<list.size(); i++){
+                                    tree.deleteNode(n,list.get(i));
+                                }
+                            }
+                            else{
+                                Node del_node = tree.searchNode(n, del);
+                                if((getCommand(input).equals("rm") && !del_node.item.isDirectory) ||
+                                   (getCommand(input).equals("rmdir") && del_node.item.isDirectory)    ){
+                                    if(!(tree.deleteNode(n, del_node)))
+                                        System.out.println(del + " does not exist in " + n.item.name);
+                                }
+                                else{
+                                    if(getCommand(input).equals("rm") && del_node.item.isDirectory)
+                                        System.out.println(del_node.item.name + " is a directory.");
+                                    if(getCommand(input).equals("rmdir") && !del_node.item.isDirectory) 
+                                        System.out.println(del_node.item.name + " is not a directory.");
+                                }
+                            }
+                        }
                     }
                     else{
-                        if(getCommand(input).equals("rm") && del_node.item.isDirectory)
-                            System.out.println(del_node.item.name + " is a directory.");
-                        if(getCommand(input).equals("rmdir") && !del_node.item.isDirectory) 
-                            System.out.println(del_node.item.name + " is not a directory.");
+                        if(del.contains("*")){
+                            ArrayList<Node> list = findAll(current, del);
+                            for(int i=0; i<list.size(); i++){
+                                tree.deleteNode(current,list.get(i));
+                            }
+                        }
+                        else{
+                            if(del.contains("/"))
+                                del = del.replace("/", "");
+                            Node del_node = tree.searchNode(current, del);
+                            if((getCommand(input).equals("rm") && !del_node.item.isDirectory) ||
+                               (getCommand(input).equals("rmdir") && del_node.item.isDirectory)    ){
+                                if(!(tree.deleteNode(current, del_node)))
+                                    System.out.println(del + " does not exist in " + current.item.name);
+                            }
+                            else{
+                                if(getCommand(input).equals("rm") && del_node.item.isDirectory)
+                                    System.out.println(del_node.item.name + " is a directory.");
+                                if(getCommand(input).equals("rmdir") && !del_node.item.isDirectory) 
+                                    System.out.println(del_node.item.name + " is not a directory.");
+                            }
+                        }
                     }
                 }
-            }
-            else if(args[1].contains("*")){
-                ArrayList<Node> list = findAll(current, args[1]);
-                for(int i=0; i<list.size(); i++){
-                    tree.deleteNode(current,list.get(i));
-                }
-            }
         }
     }
 
@@ -533,10 +559,12 @@ public class FileSystem {
         return input.split(" ")[0];
     }
     
+    static String currentpath = "";
     private static void getAbsolutePath(Node cur){
         Node p = cur;
         if(p.parent!=null){
-           getAbsolutePath(p.parent); 
+           getAbsolutePath(p.parent);
+           currentpath += "/" + p.item.name;
            System.out.print("/" + p.item.name);
         }
         else{
@@ -553,9 +581,12 @@ public class FileSystem {
                 n.item.content += tmp + "\n";
         }while(!(tmp.equals(":q!")));
         
-        StringBuilder x = new StringBuilder(n.item.content);
-        x.setLength(x.length()-1);
-        n.item.content = x.toString();
+        if(!n.item.content.isEmpty()){
+            StringBuilder x = new StringBuilder(n.item.content);
+
+            x.setLength(x.length()-1);
+            n.item.content = x.toString();
+        }
     }
 
     private static ArrayList<Node> findAll(Node current, String arg) {
