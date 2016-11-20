@@ -1,3 +1,0 @@
-test@user:~$ Exception in thread "main" java.util.NoSuchElementException: No line found
-	at java.util.Scanner.nextLine(Scanner.java:1540)
-	at GeneralTree.FileSystem.main(FileSystem.java:64)
