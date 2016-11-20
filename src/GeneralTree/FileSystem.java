@@ -211,18 +211,24 @@ public class FileSystem {
             System.out.println("Missing arguments.");
         else{
             String file; 
-            if(!args[1].contains("/"))
-               file = args[1];
-            else{
-                String[] s = args[1].split("/");
-                List<String> node_path = new ArrayList<String>(Arrays.asList(s));
-                node_path.removeAll(Collections.singleton(""));
 
-                file = node_path.remove(node_path.size()-1);
+            String[] s = args[1].split("/");
+            List<String> node_path = new ArrayList<String>(Arrays.asList(s));
+            node_path.removeAll(Collections.singleton(""));
+
+            file = node_path.remove(node_path.size()-1);
+
+            if(!node_path.isEmpty()){
                 String path = "";
                 for(int i=0; i<node_path.size(); i++){
                     path += node_path.get(i) + "/";
                 }
+
+                if(!path.contains("root")){
+                    String tmp = path;
+                    path = currentpath + "/" + tmp; 
+                }
+
                 if (!checkPathExists(path)){
                    System.out.println(path + " does not exist.");
                    flag = true;
