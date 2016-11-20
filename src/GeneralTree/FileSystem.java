@@ -53,29 +53,35 @@ public class FileSystem {
         String[] args = input.split(" ");
         if(args.length < 2)
             System.out.println("Missing arguments.");
-        else if(!args[1].contains("/")){
-            for(int i=1; i<args.length; i++){
-                Node n = new Node(new FileDescriptor(args[i], getDate(), true));
-                if(!(tree.insertNode(current,n)))
-                    System.out.println(n.item.name + " already exists in " + current.item.name);
-            }
-        }
+
         else{
-            String[] s = args[1].split("/");
-            List<String> node_path = new ArrayList<String>(Arrays.asList(s));
-            node_path.removeAll(Collections.singleton(""));
-            
-            String new_item = node_path.remove(node_path.size()-1);
-            String path = "";
-            for(int i=0; i<node_path.size(); i++){
-                path += node_path.get(i) + "/";
+                for(int j=1; j<args.length; j++){
+                    String[] s = args[j].split("/");
+                    List<String> node_path = new ArrayList<String>(Arrays.asList(s));
+                    node_path.removeAll(Collections.singleton(""));
+
+                    String new_item = node_path.remove(node_path.size()-1);
+                    
+                    if(!node_path.isEmpty()){
+                        String path = "";
+                        for(int i=0; i<node_path.size(); i++){
+                            path += node_path.get(i) + "/";
+                        }
+                        if (checkPathExists(path)){
+                            Node n = recursive_search(path);
+                            Node new_item_node = new Node(new FileDescriptor(new_item, getDate(), true));
+                            if(!(tree.insertNode(n,new_item_node)))
+                                System.out.println(n.item.name + " already exists in " + current.item.name);
+                        }
+                    }
+                    else{
+                        //for mkdir /this
+                        Node new_item_node = new Node(new FileDescriptor(new_item, getDate(), true));
+                        if(!(tree.insertNode(root,new_item_node)))
+                            System.out.println(new_item_node.item.name + " already exists in " + current.item.name);
+                    }
             }
-            if (checkPathExists(path)){
-                Node n = recursive_search(path);
-                Node new_item_node = new Node(new FileDescriptor(new_item, getDate(), true));
-                if(!(tree.insertNode(n,new_item_node)))
-                    System.out.println(n.item.name + " already exists in " + current.item.name);
-            }
+           
         }
     }
 
