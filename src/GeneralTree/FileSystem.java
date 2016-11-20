@@ -69,16 +69,16 @@ public class FileSystem {
                             path += node_path.get(i) + "/";
                         }
                         
-                        if(!path.contains("root")){
-                            String tmp = path;
-                            path = currentpath + "/" + tmp; 
-                        }
+                        path = appendPath(path);
                         
                         if (checkPathExists(path)){
                             Node n = recursive_search(path);
                             Node new_item_node = new Node(new FileDescriptor(new_item, getDate(), true));
                             if(!(tree.insertNode(n,new_item_node)))
                                 System.out.println(n.item.name + " already exists in " + current.item.name);
+                        }
+                        else{
+                            System.out.println(path + " does not exist.");
                         }
                     }
                     else{
@@ -110,12 +110,8 @@ public class FileSystem {
                         for(int i=0; i<node_path.size(); i++){
                             path += node_path.get(i) + "/";
                         }
-                        if(!path.contains("root")){
-                            String tmp = path;
-                            path = currentpath + "/" + tmp; 
-                        }
+                        path = appendPath(path);
                             
-                    
                         if (checkPathExists(path)){
                             Node n = recursive_search(path);
                             if(del.contains("*")){
@@ -138,6 +134,9 @@ public class FileSystem {
                                         System.out.println(del_node.item.name + " is not a directory.");
                                 }
                             }
+                        }
+                        else{
+                            System.out.println(path + " does not exist");
                         }
                     }
                     else{
@@ -224,10 +223,7 @@ public class FileSystem {
                     path += node_path.get(i) + "/";
                 }
 
-                if(!path.contains("root")){
-                    String tmp = path;
-                    path = currentpath + "/" + tmp; 
-                }
+                path = appendPath(path);
 
                 if (!checkPathExists(path)){
                    System.out.println(path + " does not exist.");
@@ -291,6 +287,9 @@ public class FileSystem {
                 for(int i=0; i<node_path.size(); i++){
                     path += node_path.get(i) + "/";
                 }
+                
+                path = appendPath(path);
+                
                 if (!checkPathExists(path)){
                    System.out.println(path + " does not exist.");
                    flag = true;
@@ -338,11 +337,31 @@ public class FileSystem {
         if(args.length < 3)
             System.out.println("Missing arguments.");
         else{
-            Node file = tree.searchNode(current, args[1]);
+            Node file;
+            
+            String[] s = args[1].split("/");
+            List<String> node_path = new ArrayList<String>(Arrays.asList(s));
+            node_path.removeAll(Collections.singleton(""));
+            String fname = node_path.remove(node_path.size()-1);
+            
+            String path = "";
+            for(int i=0; i<node_path.size(); i++){
+                path += node_path.get(i) + "/";
+            }
+           
+            path = appendPath(path);
+            file = tree.searchNode(recursive_search(path), fname);
+            
             if(file == null){
                 System.out.println(args[1] + " does not exist.");
             }
+            
             else{
+                if(!args[2].contains("root")){
+                    String tmp = args[2].replace(current.item.name, "");
+                    args[2] = currentpath + "/" + tmp; 
+                }
+                 
                 if(checkPathExists(args[2])){
                     Node dest = recursive_search(args[2]);
                     if(tree.checkNodeExists(dest, file))
@@ -664,5 +683,13 @@ public class FileSystem {
 
     private static void clear() {
        
+    }
+
+    private static String appendPath(String path) {
+        if(!path.contains("root")){
+            String tmp = path.replace(current.item.name, "");
+            path = currentpath + "/" + tmp; 
+        }
+        return path;
     }
 }
