@@ -34,7 +34,6 @@ public class FileSystem {
     public static void main(String[] args) {
         initCommands();
         Scanner sc = new Scanner(System.in);
-        
         do{
             System.out.print("test@user:");
             getAbsolutePath(current);
@@ -203,10 +202,15 @@ public class FileSystem {
             if(flag==false){
                 if(tree.searchNode(location, file)!=null){
                     Node n = tree.searchNode(location, file);
-                    System.out.println(n.item.content);
-                    n.item.content += "\n";
-                    openEditor(n);
-                    n.item.last_modified = getDate();
+                    if(!n.item.isDirectory){
+                        System.out.println(n.item.content);
+                        n.item.content += "\n";
+                        openEditor(n);
+                        n.item.last_modified = getDate();
+                    }
+                    else {
+                        System.out.println(file + " is directory.");
+                    }
                 }
                 else{
                     Node n = new Node(new FileDescriptor(file, getDate(), false));
@@ -236,16 +240,56 @@ public class FileSystem {
         if(args.length < 3)
             System.out.println("Missing arguments.");
         else{
-            if(tree.searchNode(current, args[1])!=null){
-                if(tree.searchNode(current, args[2])!=null){
-                   System.out.println(args[2] + " already exists.");
+            String oldname = args[1];
+            String newname = args[2];
+            boolean flag = false;
+            if(args[1].contains("/")){
+                String[] s = args[1].split("/");
+                List<String> node_path = new ArrayList<String>(Arrays.asList(s));
+                node_path.removeAll(Collections.singleton(""));
+
+                String filename = node_path.remove(node_path.size()-1);
+                String path = "";
+                for(int i=0; i<node_path.size(); i++){
+                    path += node_path.get(i) + "/";
+                }
+                if (!checkPathExists(path)){
+                   System.out.println(path + " does not exist.");
+                   flag = true;
                 }
                 else{
-                   tree.searchNode(current, args[1]).item.name = args[2];
+                    Node location = recursive_search(path);
+                    if(location == current){
+                        if(tree.searchNode(current, filename)!=null)
+                            oldname = filename;
+                    }
+                    else{
+                        System.out.println("Cant rename files from other directory.");
+                        flag = true;
+                    }
                 }
             }
-            else{
-                System.out.println(args[1] + " does not exist.");
+            if(args[2].contains("/")){
+                String[] s = args[2].split("/");
+                List<String> node_path = new ArrayList<String>(Arrays.asList(s));
+                node_path.removeAll(Collections.singleton(""));
+
+                String filename = node_path.remove(node_path.size()-1);
+                newname=filename;
+            }
+            
+            if(flag == false){
+                if(tree.searchNode(current, oldname)!=null){
+                    if(tree.searchNode(current, newname)!=null){
+                       System.out.println(newname + " already exists.");
+                    }
+                    else{
+                       tree.searchNode(current, oldname).item.name = newname;
+                    }
+                }
+                else{
+                    System.out.println(oldname + " does not exist.");
+                }
             }
         }
         
@@ -473,10 +517,12 @@ public class FileSystem {
                 Logger.getLogger(FileSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
+        commands.put("clear", () ->  {
+            clear();
+        });
         
     }
-     
-        
+    
     public static String getCommand(String input){
         return input.split(" ")[0];
     }
@@ -571,5 +617,9 @@ public class FileSystem {
             }
             tree.insertNode(new_node, tmp);
         }
+    }
+
+    private static void clear() {
+       
     }
 }
