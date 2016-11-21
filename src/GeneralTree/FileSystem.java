@@ -439,7 +439,7 @@ public class FileSystem implements Serializable{
                 String f = (tmp.item.isDirectory) ? "directory" : "file";
                 System.out.print("Name: " + tmp.item.name + " (" + f + ")\n" + "Date Created: " + 
                         tmp.item.created.toGMTString().replace("GMT", "") + "\n" + "Last Modified: " + tmp.item.last_modified.toGMTString().replace("GMT", ""));
-                System.out.println("");
+                System.out.println("\n");
             }
         }
         
