@@ -36,6 +36,8 @@ public class FileSystem implements Serializable{
     static Map<String, Runnable> commands = new HashMap();
     static Tree tree = new Tree();
     static String input; 
+    static FileOutputStream fileOut;
+    static ObjectOutputStream out;
     
     
     public static void main(String[] args) throws FileNotFoundException, IOException {
@@ -44,9 +46,10 @@ public class FileSystem implements Serializable{
         
         deserialize();
         
-        FileOutputStream fileOut = new FileOutputStream("filesystem.ser");
-        ObjectOutputStream out = new ObjectOutputStream(fileOut);
+        fileOut = new FileOutputStream("filesystem.ser");
+        out = new ObjectOutputStream(fileOut);
         
+        System.out.println("Virtual Terminal. \nMake sure to quit the terminal properly (type \"quit\") \nto save folders and files.\n");
         do{
             System.out.print("test@user:");
             getAbsolutePath(current);
@@ -62,14 +65,15 @@ public class FileSystem implements Serializable{
                 System.out.println("Check commands");
             }
             currentpath = "";
+            
         } while(true);
         
-        out.writeObject(root);
+        serialize(root);
         out.close();
         fileOut.close();
     }
     
-    private static void mkdir() throws ClassNotFoundException { 
+    private static void mkdir() throws ClassNotFoundException, IOException { 
         String[] args = input.split(" ");
         if(args.length < 2)
             System.out.println("Missing arguments.");
@@ -432,21 +436,52 @@ public class FileSystem implements Serializable{
         else if(args[1].equals("-")){
             for(int i=0, ctr=0; i<current.children.size(); i++){
                 Node tmp = current.children.get(i);
-                System.out.print("Name: " + tmp.item.name + "\n" + "Date Created: " + tmp.item.created.toGMTString().replace("GMT", "") + "\n" + "Last Modified: " + tmp.item.last_modified.toGMTString().replace("GMT", ""));
-                System.out.println("\n");
+                String f = (tmp.item.isDirectory) ? "directory" : "file";
+                System.out.print("Name: " + tmp.item.name + " (" + f + ")\n" + "Date Created: " + 
+                        tmp.item.created.toGMTString().replace("GMT", "") + "\n" + "Last Modified: " + tmp.item.last_modified.toGMTString().replace("GMT", ""));
+                System.out.println("");
             }
         }
         
         else if (args[1].contains("*")){
+            String[] s = args[1].split("/");
+            List<String> node_path = new ArrayList<String>(Arrays.asList(s));
+            node_path.removeAll(Collections.singleton("")); 
+            String search = node_path.remove(node_path.size()-1).replaceAll("\\*", "\\\\w*");
+            
             ArrayList<Node> match = new ArrayList<>();
             
-            String search = args[1].replaceAll("\\*", "\\\\w*");
-            for(int i=0; i<current.children.size(); i++){
-                Node tmp = current.children.get(i);
-                if(tmp.item.name.matches(search)){
-                    match.add(tmp);
+            if(node_path.isEmpty()){
+                System.out.println(current.children.size());
+                for(int i=0; i<current.children.size(); i++){
+                    Node tmp = current.children.get(i);
+                    if(tmp.item.name.matches(search)){
+                        match.add(tmp);
+                    }
                 }
             }
+            else{
+                String path = "";
+                for(int i=0; i<node_path.size(); i++){
+                    path += node_path.get(i) + "/";
+                }
+
+                path = appendPath(path);
+
+                if (checkPathExists(path)){
+                    Node n = recursive_search(path);
+                    for(int i=0; i<n.children.size(); i++){
+                        Node tmp = n.children.get(i);
+                        if(tmp.item.name.matches(search)){
+                            match.add(tmp);
+                        }
+                    }
+                }
+                else{
+                    System.out.println(path + " does not exist.");
+                }
+            }
+            
             
             for(int i=0; i<match.size(); i++){
                 System.out.print(match.get(i).item.name + " ");
@@ -519,6 +554,8 @@ public class FileSystem implements Serializable{
             try {
                 mkdir();
             } catch (ClassNotFoundException ex) {
+                Logger.getLogger(FileSystem.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
                 Logger.getLogger(FileSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
@@ -729,5 +766,18 @@ public class FileSystem implements Serializable{
             root  = new Node(new FileDescriptor("root", getDate(), true));
             current = root;
         }
+    }
+
+    private static void serialize(Node n) throws IOException {
+        out.writeObject(n);
+        for(int i=0; i<n.children.size(); i++){
+           Node tmp = n.children.get(i);
+           if(tmp.item.isDirectory){
+               serialize(tmp);
+           }
+           else{
+               out.writeObject(tmp);
+           }
+       }
     }
 }
