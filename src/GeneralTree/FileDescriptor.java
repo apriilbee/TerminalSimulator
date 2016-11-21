@@ -5,13 +5,14 @@
  */
 package GeneralTree;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  *
  * @author testuser
  */
-public class FileDescriptor {
+public class FileDescriptor implements Serializable{
     public String name;
     public Date created;
     public Date last_modified;

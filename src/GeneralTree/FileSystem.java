@@ -6,6 +6,13 @@
 package GeneralTree;
 
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -23,17 +30,23 @@ import java.util.logging.Logger;
  *
  * @author testuser
  */
-public class FileSystem {
-    static Node root = new Node(new FileDescriptor("root", getDate(), true));
-    static Node current = root; 
+public class FileSystem implements Serializable{
+    static Node root; 
+    static Node current;
     static Map<String, Runnable> commands = new HashMap();
     static Tree tree = new Tree();
     static String input; 
     
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException, IOException {
         initCommands();
         Scanner sc = new Scanner(System.in);
+        
+        deserialize();
+        
+        FileOutputStream fileOut = new FileOutputStream("filesystem.ser");
+        ObjectOutputStream out = new ObjectOutputStream(fileOut);
+        
         do{
             System.out.print("test@user:");
             getAbsolutePath(current);
@@ -41,6 +54,8 @@ public class FileSystem {
             input = sc.nextLine();
             if(input.isEmpty())
                 continue;
+            else if (input.equals("quit"))
+                break;
             try{
                 commands.get(getCommand(input)).run();
             } catch (Exception e){
@@ -48,6 +63,10 @@ public class FileSystem {
             }
             currentpath = "";
         } while(true);
+        
+        out.writeObject(root);
+        out.close();
+        fileOut.close();
     }
     
     private static void mkdir() throws ClassNotFoundException { 
@@ -479,7 +498,7 @@ public class FileSystem {
 
     private static void whereis() throws ClassNotFoundException {
         String[] args = input.split(" ");
-        searchAll(root, args[1]);
+        searchAll(root, args[1].replace("/", ""));
         System.out.println("");
     }
     
@@ -691,5 +710,24 @@ public class FileSystem {
             path = currentpath + "/" + tmp; 
         }
         return path;
+    }
+
+    private static void deserialize() {
+        Node r = null;
+        try {
+            FileInputStream fileIn = new FileInputStream("filesystem.ser");
+            ObjectInputStream in = new ObjectInputStream(fileIn);
+            r = (Node) in.readObject();
+            root = r;
+            current = root;
+            in.close();
+            fileIn.close();
+        }catch(IOException i) {
+            root  = new Node(new FileDescriptor("root", getDate(), true));
+            current = root;
+        }catch(ClassNotFoundException c) {
+            root  = new Node(new FileDescriptor("root", getDate(), true));
+            current = root;
+        }
     }
 }

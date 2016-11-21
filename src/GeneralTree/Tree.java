@@ -5,11 +5,13 @@
  */
 package GeneralTree;
 
+import java.io.Serializable;
+
 /**
  *
  * @author April Dae Bation
  */
-public class Tree {
+public class Tree implements Serializable{
 
     public boolean insertNode(Node parent, Node child){
         if(!checkNodeExists(parent,child)){
