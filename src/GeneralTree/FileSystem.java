@@ -9,6 +9,7 @@ package GeneralTree;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -39,27 +40,28 @@ public class FileSystem implements Serializable{
     static String input; 
     static FileOutputStream fileOut;
     static ObjectOutputStream out;
-    
+    static Scanner in;
     
     public static void main(String[] args) throws FileNotFoundException, IOException {
         initCommands();
-        Scanner sc = new Scanner(System.in);
-        
+        readFromFile();
         deserialize();
         
         fileOut = new FileOutputStream("filesystem.ser");
         out = new ObjectOutputStream(fileOut);
         
-        System.out.println("Virtual Terminal. \nMake sure to quit the terminal properly (type \"quit\") \nto save folders and files.\nType \":q!\" to close the Editor.");
+        System.out.println("Virtual Terminal");
         do{
             System.out.print("test@user:");
             getAbsolutePath(current);
             System.out.print("$ ");
-            input = sc.nextLine();
+            //input = sc.nextLine();
+            input = in.nextLine();
+            System.out.println(input);
             if(input.isEmpty())
                 continue;
-            else if (input.equals("quit"))
-                break;
+//            else if (input.equals("quit"))
+//                break;
             try{
                 commands.get(getCommand(input)).run();
             } catch (Exception e){
@@ -67,7 +69,7 @@ public class FileSystem implements Serializable{
             }
             currentpath = "";
             
-        } while(true);
+        } while(in.hasNext());
         
         serialize(root);
         out.close();
@@ -356,11 +358,23 @@ public class FileSystem implements Serializable{
 
                 String filename = node_path.remove(node_path.size()-1);
                 String path = "";
-                for(int i=0; i<node_path.size(); i++){
-                    path += node_path.get(i) + "/";
-                }
                 
-                path = appendPath(path);
+                if(node_path.contains("..")){
+                    path = findPath2(args[1]);
+                    String[] tmp = path.split("/");
+
+                    path = "";
+                    for(int i=0; i<tmp.length-1; i++){
+                        path += tmp[i] + "/";
+                    }
+
+                }               
+                else{
+                    for(int i=0; i<node_path.size(); i++){
+                        path += node_path.get(i) + "/";
+                    }
+                    path = appendPath(path);
+                }
                 
                 if (!checkPathExists(path)){
                    System.out.println(path + " does not exist.");
@@ -417,11 +431,24 @@ public class FileSystem implements Serializable{
             String fname = node_path.remove(node_path.size()-1);
             
             String path = "";
-            for(int i=0; i<node_path.size(); i++){
-                path += node_path.get(i) + "/";
+            
+            if(node_path.contains("..")){
+                path = findPath2(args[1]);
+                String[] tmp = path.split("/");
+
+                path = "";
+                for(int i=0; i<tmp.length-1; i++){
+                    path += tmp[i] + "/";
+                }
+            }     
+            else {
+                for(int i=0; i<node_path.size(); i++){
+                    path += node_path.get(i) + "/";
+                }
+
+                path = appendPath(path);
             }
-           
-            path = appendPath(path);
+            
             file = tree.searchNode(recursive_search(path), fname);
             
             if(file == null){
@@ -482,10 +509,12 @@ public class FileSystem implements Serializable{
         if(args.length < 2){
             for(int i=0, ctr=0; i<current.children.size(); i++){
                 Node tmp = current.children.get(i);
-                String f = (tmp.item.isDirectory) ? "directory" : "file";
+//                String f = (tmp.item.isDirectory) ? "directory" : "file";
 //                System.out.print("Name: " + tmp.item.name + " (" + f + ")\n" + "Date Created: " + 
 //                        tmp.item.created.toGMTString().replace("GMT", "") + "\n" + "Last Modified: " + tmp.item.last_modified.toGMTString().replace("GMT", ""));
-                System.out.println(tmp.item.name);
+                
+               String f = (tmp.item.isDirectory) ? "/" : "";
+               System.out.println(tmp.item.name + f);
                // System.out.println("\n");
             }
         }
@@ -858,6 +887,13 @@ public class FileSystem implements Serializable{
                out.writeObject(tmp);
            }
        }
+    }
+
+    private static void readFromFile() throws FileNotFoundException {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter filename: ");
+        String filename = sc.nextLine();
+        in = new Scanner(new FileReader(filename));
     }
 
    
