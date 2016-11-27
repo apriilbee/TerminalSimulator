@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,7 +50,7 @@ public class FileSystem implements Serializable{
         fileOut = new FileOutputStream("filesystem.ser");
         out = new ObjectOutputStream(fileOut);
         
-        System.out.println("Virtual Terminal. \nMake sure to quit the terminal properly (type \"quit\") \nto save folders and files.\n");
+        System.out.println("Virtual Terminal. \nMake sure to quit the terminal properly (type \"quit\") \nto save folders and files.\nType \":q!\" to close the Editor.");
         do{
             System.out.print("test@user:");
             getAbsolutePath(current);
@@ -195,13 +196,27 @@ public class FileSystem implements Serializable{
         String go;
         if(args.length < 2)
             System.out.println("Missing arguments.");
+        else if(args[1].contains("..")){
+            go = args[1];
+            String s = findPath2(args[1]);
+            if(checkPathExists(s)){
+                Node n;
+                n = recursive_search(s);
+                if(!n.item.isDirectory)
+                    System.out.println(n.item.name + " is not a directory.");
+                else
+                    current = n;
+            }
+            else{
+                System.out.println(args[1] + " does not exist.");
+            }
+        }
         else if(!args[1].contains("/")){
             go = args[1]; 
             Node n = tree.searchNode(current, go);
               
-            if(go.equals("root"))
-                current = root;
-            else if(n==null)
+           
+            if(n==null)
                 System.out.println(args[1] + " does not exist");
             else if (!n.item.isDirectory)
                 System.out.println(args[1] + " is not a directory");
@@ -380,6 +395,7 @@ public class FileSystem implements Serializable{
             }
             
             else{
+                
                 if(!args[2].contains("root")){
                     String tmp = args[2].replace(current.item.name, "");
                     args[2] = currentpath + "/" + tmp; 
@@ -402,7 +418,6 @@ public class FileSystem implements Serializable{
         }
     }
 
-    //fix this
     private static void cp() throws ClassNotFoundException {
          String[] args = input.split(" ");
         if(args.length < 3)
@@ -452,7 +467,6 @@ public class FileSystem implements Serializable{
             ArrayList<Node> match = new ArrayList<>();
             
             if(node_path.isEmpty()){
-                System.out.println(current.children.size());
                 for(int i=0; i<current.children.size(); i++){
                     Node tmp = current.children.get(i);
                     if(tmp.item.name.matches(search)){
@@ -481,8 +495,6 @@ public class FileSystem implements Serializable{
                     System.out.println(path + " does not exist.");
                 }
             }
-            
-            
             for(int i=0; i<match.size(); i++){
                 System.out.print(match.get(i).item.name + " ");
             }
@@ -706,6 +718,41 @@ public class FileSystem implements Serializable{
         }
         return true;
     }
+    
+    private static String findPath2(String arg) throws ClassNotFoundException {
+        String[] s = arg.split("/");
+        List<String> node_path = new ArrayList<String>(Arrays.asList(s));
+        node_path.removeAll(Collections.singleton(""));
+        
+        String path = "";
+        
+        if(node_path.size() == 1){
+           path = current.parent.item.name;
+        }
+        else {
+            Stack address = new Stack();
+            Node tmp_node = current;
+            for(int i=s.length-1; i>=0; i--){
+                String tmp = node_path.get(i);
+                if(!tmp.equals("..")){
+                    address.add(tmp);
+                }
+                else{
+                    address.add(tmp_node.parent.item.name);
+                    tmp_node = tmp_node.parent;
+                }
+            }
+            
+            path += address.get(address.size()-1)+ "/";
+            for(int i=0; i<s.length; i++){
+                String tmp = node_path.get(i);
+                if(!tmp.equals("..")){
+                    path+= tmp + "/";
+                }
+            }
+        }
+        return path;
+    }
 
     
     public static Node recursive_search(String arg) throws ClassNotFoundException{
@@ -780,4 +827,6 @@ public class FileSystem implements Serializable{
            }
        }
     }
+
+   
 }
