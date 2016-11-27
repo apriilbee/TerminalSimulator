@@ -138,14 +138,26 @@ public class FileSystem implements Serializable{
                     node_path.removeAll(Collections.singleton(""));
 
                     String del = node_path.remove(node_path.size()-1);
-
                     
                     if(node_path.size() > 0){
                         String path = "";
-                        for(int i=0; i<node_path.size(); i++){
-                            path += node_path.get(i) + "/";
+                        if(node_path.contains("..")){
+                            path = findPath2(args[1]);
+                            String[] tmp = path.split("/");
+                            
+                            path = "";
+                            for(int i=0; i<tmp.length-1; i++){
+                                path += tmp[i] + "/";
+                            }
+                            
                         }
-                        path = appendPath(path);
+                        else {
+                            for(int i=0; i<node_path.size(); i++){
+                               path += node_path.get(i) + "/";
+                            }
+                            path = appendPath(path);
+                        }
+                       
                             
                         if (checkPathExists(path)){
                             Node n = recursive_search(path);
@@ -268,11 +280,22 @@ public class FileSystem implements Serializable{
 
             if(!node_path.isEmpty()){
                 String path = "";
-                for(int i=0; i<node_path.size(); i++){
-                    path += node_path.get(i) + "/";
-                }
+                if(node_path.contains("..")){
+                           path = findPath2(args[1]);
+                           String[] tmp = path.split("/");
 
-                path = appendPath(path);
+                           path = "";
+                           for(int i=0; i<tmp.length-1; i++){
+                               path += tmp[i] + "/";
+                           }
+
+                }
+                else {
+                    for(int i=0; i<node_path.size(); i++){
+                        path += node_path.get(i) + "/";
+                    }
+                    path = appendPath(path);
+                }
 
                 if (!checkPathExists(path)){
                    System.out.println(path + " does not exist.");
@@ -456,16 +479,14 @@ public class FileSystem implements Serializable{
     
     private static void ls() throws ClassNotFoundException {
         String[] args = input.split(" ");
-        if(args.length < 2)
-            System.out.println("Missing arguments.");
-        
-        else if(args[1].equals("-")){
+        if(args.length < 2){
             for(int i=0, ctr=0; i<current.children.size(); i++){
                 Node tmp = current.children.get(i);
                 String f = (tmp.item.isDirectory) ? "directory" : "file";
-                System.out.print("Name: " + tmp.item.name + " (" + f + ")\n" + "Date Created: " + 
-                        tmp.item.created.toGMTString().replace("GMT", "") + "\n" + "Last Modified: " + tmp.item.last_modified.toGMTString().replace("GMT", ""));
-                System.out.println("\n");
+//                System.out.print("Name: " + tmp.item.name + " (" + f + ")\n" + "Date Created: " + 
+//                        tmp.item.created.toGMTString().replace("GMT", "") + "\n" + "Last Modified: " + tmp.item.last_modified.toGMTString().replace("GMT", ""));
+                System.out.println(tmp.item.name);
+               // System.out.println("\n");
             }
         }
         
