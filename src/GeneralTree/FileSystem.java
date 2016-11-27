@@ -89,11 +89,22 @@ public class FileSystem implements Serializable{
                     
                     if(!node_path.isEmpty()){
                         String path = "";
-                        for(int i=0; i<node_path.size(); i++){
-                            path += node_path.get(i) + "/";
+                        if(node_path.contains("..")){
+                            path = findPath2(args[1]);
+                            String[] tmp = path.split("/");
+                            
+                            path = "";
+                            for(int i=0; i<tmp.length-1; i++){
+                                path += tmp[i] + "/";
+                            }
+                            
                         }
-                        
-                        path = appendPath(path);
+                        else {
+                            for(int i=0; i<node_path.size(); i++){
+                                path += node_path.get(i) + "/";
+                            }
+                            path = appendPath(path);
+                        }
                         
                         if (checkPathExists(path)){
                             Node n = recursive_search(path);
