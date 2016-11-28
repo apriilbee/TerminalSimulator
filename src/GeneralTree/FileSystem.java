@@ -43,6 +43,10 @@ public class FileSystem implements Serializable{
     static Scanner in;
     
     public static void main(String[] args) throws FileNotFoundException, IOException {
+       System.out.println("Virtual Terminal");
+       System.out.println("Type \"quit\" to terminate program. ");
+        System.out.println("For editor, type \":q!\" to close editor. \n");
+        
         initCommands();
         readFromFile();
         deserialize();
@@ -50,7 +54,7 @@ public class FileSystem implements Serializable{
         fileOut = new FileOutputStream("filesystem.ser");
         out = new ObjectOutputStream(fileOut);
         
-        System.out.println("Virtual Terminal");
+        
         do{
             System.out.print("test@user:");
             getAbsolutePath(current);
