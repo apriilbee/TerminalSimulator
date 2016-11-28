@@ -45,6 +45,7 @@ public class FileSystem implements Serializable{
     public static void main(String[] args) throws FileNotFoundException, IOException {
         initCommands();
         readFromFile();
+//        Scanner in = new Scanner(System.in);
         deserialize();
         
         fileOut = new FileOutputStream("filesystem.ser");
@@ -55,21 +56,25 @@ public class FileSystem implements Serializable{
             System.out.print("test@user:");
             getAbsolutePath(current);
             System.out.print("$ ");
-            //input = sc.nextLine();
-            input = in.nextLine();
-            System.out.println(input);
+            if( in!=null && in.hasNext() ){
+                input = in.nextLine();
+                System.out.println(input);
+            }
+            else{
+                Scanner sc = new Scanner(System.in);
+                input = sc.nextLine();
+            }
             if(input.isEmpty())
                 continue;
-//            else if (input.equals("quit"))
-//                break;
+            else if (input.equals("quit"))
+                break;
             try{
                 commands.get(getCommand(input)).run();
             } catch (Exception e){
                 System.out.println("Check commands");
             }
             currentpath = "";
-            
-        } while(in.hasNext());
+        } while (true);    
         
         serialize(root);
         out.close();
@@ -311,8 +316,12 @@ public class FileSystem implements Serializable{
                 if(tree.searchNode(location, file)!=null){
                     Node n = tree.searchNode(location, file);
                     if(!n.item.isDirectory){
-                        System.out.println(n.item.content);
-                        n.item.content += "\n";
+                        if(args[0].equals(">"))
+                            n.item.content = "";
+                        else {
+                            System.out.println(n.item.content);
+                            n.item.content += "\n";
+                        }
                         openEditor(n);
                         n.item.last_modified = getDate();
                     }
@@ -703,8 +712,19 @@ public class FileSystem implements Serializable{
                 Logger.getLogger(FileSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
-        commands.put("clear", () ->  {
-            clear();
+        commands.put(">", () ->  {
+            try {
+                edit();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(FileSystem.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+        commands.put(">>", () ->  {
+            try {
+                edit();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(FileSystem.class.getName()).log(Level.SEVERE, null, ex);
+            }
         });
         
     }
@@ -845,10 +865,6 @@ public class FileSystem implements Serializable{
         }
     }
 
-    private static void clear() {
-       
-    }
-
     private static String appendPath(String path) {
         if(!path.contains("root")){
             String tmp = path.replace(current.item.name, "");
@@ -890,11 +906,13 @@ public class FileSystem implements Serializable{
     }
 
     private static void readFromFile() throws FileNotFoundException {
-        Scanner sc = new Scanner(System.in);
-        System.out.println("Enter filename: ");
-        String filename = sc.nextLine();
-        in = new Scanner(new FileReader(filename));
-    }
-
-   
+        try {
+            Scanner sc = new Scanner(System.in);
+            System.out.print("Enter filename: ");
+            String filename = sc.nextLine();
+            in = new Scanner(new FileReader(filename));
+        } catch (Exception e){
+            System.out.println("File does not exist.\n\n");
+        }
+    }   
 }
