@@ -45,7 +45,6 @@ public class FileSystem implements Serializable{
     public static void main(String[] args) throws FileNotFoundException, IOException {
         initCommands();
         readFromFile();
-//        Scanner in = new Scanner(System.in);
         deserialize();
         
         fileOut = new FileOutputStream("filesystem.ser");
@@ -635,9 +634,7 @@ public class FileSystem implements Serializable{
         commands.put("mkdir", () -> {
             try {
                 mkdir();
-            } catch (ClassNotFoundException ex) {
-                Logger.getLogger(FileSystem.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IOException ex) {
+            } catch (ClassNotFoundException | IOException ex) {
                 Logger.getLogger(FileSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
@@ -883,10 +880,7 @@ public class FileSystem implements Serializable{
             current = root;
             in.close();
             fileIn.close();
-        }catch(IOException i) {
-            root  = new Node(new FileDescriptor("root", getDate(), true));
-            current = root;
-        }catch(ClassNotFoundException c) {
+        } catch(IOException | ClassNotFoundException i ) {
             root  = new Node(new FileDescriptor("root", getDate(), true));
             current = root;
         }
